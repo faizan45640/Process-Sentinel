@@ -3,9 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>     // for kill()
-
-// Forward declaration only — your struct is in another file
-typedef struct ProcessStats ProcessStats;
+#include "monitor.h"
 
 // Fixed: Name matches what we call later
 unsigned long get_process_ticks(int pid) {
