@@ -1,12 +1,33 @@
 import socket
 import os
+import sys
 import json
 from huggingface_hub import InferenceClient
 
-# Setup
-HF_TOKEN = "your_huggingface_token_here" 
-client = InferenceClient(model="mistralai/Mistral-7B-Instruct-v0.2", token=HF_TOKEN)
+# --- Configuration ---
+# IMPORTANT: This application is designed for Linux and will not run on Windows.
+if os.name == 'nt':
+    print("ERROR: Process Sentinel is designed for Linux and is not compatible with Windows.", file=sys.stderr)
+    sys.exit(1)
+
+# Get Hugging Face token from environment variable for security
+HF_TOKEN = os.getenv("HF_TOKEN")
+if not HF_TOKEN:
+    print("ERROR: Hugging Face token not found.", file=sys.stderr)
+    print("Please set the HF_TOKEN environment variable.", file=sys.stderr)
+    sys.exit(1)
+
+# Use a temporary directory for the socket
 SOCKET_PATH = "/tmp/process_sentinel.sock"
+MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
+
+# --- AI Setup ---
+try:
+    client = InferenceClient(model=MODEL, token=HF_TOKEN)
+except Exception as e:
+    print(f"ERROR: Could not initialize InferenceClient: {e}", file=sys.stderr)
+    sys.exit(1)
+
 
 def get_ai_decision(data):
     # The STRICT prompt ensures the AI doesn't talk too much
