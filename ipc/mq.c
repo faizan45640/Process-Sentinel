@@ -48,3 +48,14 @@ void cleanup_mq(int mqid) {
         printf("Message Queue cleaned up successfully.\n");
     }
 }
+
+void force_cleanup_mq() {
+    int mqid = msgget(SENTINEL_MQ_KEY, 0666);
+    if (mqid != -1) {
+        if (msgctl(mqid, IPC_RMID, NULL) == -1) {
+            perror("[IPC] Warning: Failed to remove stale MQ");
+        } else {
+            printf("[IPC] Stale MQ removed (ID: %d).\n", mqid);
+        }
+    }
+}

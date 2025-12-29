@@ -6,7 +6,7 @@
 #include <sys/msg.h>
 
 // Unique key for the message queue (can be any random integer)
-#define SENTINEL_MQ_KEY 0x12345 
+#define SENTINEL_MQ_KEY 0x12346 
 
 // Command types
 typedef enum {
@@ -14,7 +14,8 @@ typedef enum {
     CMD_REMOVE,     // Remove a process
     CMD_SUSPEND,    // Pause monitoring for a PID
     CMD_RESUME,     // Resume monitoring for a PID
-    CMD_SHUTDOWN    // Tell the daemon to exit
+    CMD_SHUTDOWN,   // Tell the daemon to exit
+    CMD_CLEAN       // Remove terminated/stale processes from list
 } CommandType;
 
 // The Message Structure
@@ -31,5 +32,6 @@ int init_mq();              // Create or get the queue
 int send_sentinel_msg(int mqid, SentinelMsg *msg);
 int receive_sentinel_msg(int mqid, SentinelMsg *msg);
 void cleanup_mq(int mqid);  // Delete the queue from the system
+void force_cleanup_mq();
 
 #endif

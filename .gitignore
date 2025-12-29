@@ -1,0 +1,16 @@
+# Object files
+*.o
+
+# Executables
+sentinel_cli
+sentinel_daemon
+Process-Sentinel
+
+# Log files
+*.log
+
+# IDE files
+.vscode/
+
+# Temporary files
+*~

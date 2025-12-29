@@ -1,33 +1,37 @@
 #ifndef ANOMALY_H
 #define ANOMALY_H
 
-#include "monitor.h"  // Assuming ProcessStats is in here if needed elsewhere
+#include "monitor.h"
 
-#define HISTORY_SIZE 20
-#define Z_THRESHOLD 3.0f     // Use float suffix for clarity
+#define HISTORY_SIZE 10
+#define Z_THRESHOLD 2.0
 
-typedef enum {
-    STATE_STABLE,
-    STATE_WARNING,
-    STATE_ANOMALY
-} ProcessState;
+#define STATE_STABLE 0
+#define STATE_ANOMALY 1
 
 typedef struct {
     int pid;
     float cpu_history[HISTORY_SIZE];
     long ram_history[HISTORY_SIZE];
-    int head;           // Points to next write position (circular buffer)
-    int count;          // How many samples we have (0 to HISTORY_SIZE)
-    float cpu_mean;     // Running mean (updated incrementally)
-    float cpu_stddev;   // Running standard deviation
-    float ram_mean;     // Optional: also track RAM mean if you want
-    ProcessState state;
+    int head;
+    int count;
+    float cpu_mean;
+    float cpu_stddev;
+    int state;
 } ProcessHistory;
 
-/* Function prototypes */
+typedef struct {
+    char process_name[64];
+    int cpu_limit;
+} Rule;
+
+// Functions
 void init_history(ProcessHistory *h, int pid);
 void update_history(ProcessHistory *h, float new_cpu, long new_ram);
-int check_anomaly(ProcessHistory *h, float current_cpu);  // Returns 1 if anomaly
-void update_state(ProcessHistory *h);                    // New: manage state transitions
 
-#endif // ANOMALY_H
+// Updated to return the reason if anomaly is found
+int check_anomaly(ProcessHistory *h, float current_cpu, const char *name, char *reason_out);
+
+void load_rules();
+
+#endif

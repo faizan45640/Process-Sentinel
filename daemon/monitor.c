@@ -15,25 +15,45 @@ unsigned long get_process_ticks(int pid) {
         return 0;
     }
 
-    unsigned long utime, stime;
-    int dummy_pid;
-    char comm[256];
-    char state;
-
-    // Parse only what we need, skip the rest correctly
-    int ret = fscanf(file,
-        "%d %255s %c "                  // pid, comm (safe), state
-        "%*d %*d %*d %*d %*d "           // skip ppid, pgrp, etc.
-        "%*u %*u %*u %*u %*u "           // skip flags, minflt, etc.
-        "%lu %lu",                      // utime (14th field), stime (15th)
-        &dummy_pid, comm, &state,
-        &utime, &stime
-    );
-
+    char buffer[1024];
+    if (!fgets(buffer, sizeof(buffer), file)) {
+        fclose(file);
+        return 0;
+    }
     fclose(file);
 
-    if (ret != 5) {
-        return 0;  // Failed to read utime and stime properly
+    // Find the last ')' to correctly handle process names with spaces/parens
+    char *right_paren = strrchr(buffer, ')');
+    if (!right_paren) return 0;
+
+    // The string after ')' contains the stats we need
+    // Format: state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt cmajflt utime stime
+    // Indices relative to 'right_paren + 2' (skip ") "):
+    // 0: state (%c)
+    // 1: ppid (%d)
+    // ...
+    // 11: utime (%lu)
+    // 12: stime (%lu)
+
+    char state;
+    unsigned long utime = 0, stime = 0;
+    
+    // We use sscanf to skip fields. 
+    // The format string starts matching from the character AFTER the space following ')'
+    // so we pointer arithmetic: right_paren + 2.
+    // Safety check: ensure we don't go out of bounds
+    if (strlen(right_paren) < 2) return 0;
+
+    int ret = sscanf(right_paren + 2, 
+        "%c "           // state
+        "%*d %*d %*d %*d %*d " // ppid, pgrp, session, tty_nr, tpgid
+        "%*u %*u %*u %*u %*u " // flags, minflt, cminflt, majflt, cmajflt
+        "%lu %lu",             // utime, stime
+        &state, &utime, &stime
+    );
+
+    if (ret != 3) { // We expect state, utime, stime
+        return 0; 
     }
 
     return utime + stime;

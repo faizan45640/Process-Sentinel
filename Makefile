@@ -3,7 +3,7 @@
 # Compiler and Flags
 CC = gcc
 CFLAGS = -Wall -Wextra -pthread -g
-LDFLAGS = -pthread
+LDFLAGS = -pthread -lm
 
 # Directories
 SRC_DIR = .
@@ -45,6 +45,13 @@ $(CLI_TARGET): $(CLI_OBJS)
 # Clean up build artifacts
 clean:
 	rm -f $(DAEMON_TARGET) $(CLI_TARGET) $(DAEMON_OBJS) $(CLI_OBJS)
+
+# Clean up IPC resources (helpful if daemon crashes)
+ipc-clean:
+	@echo "Cleaning up IPC resources..."
+	-ipcs -m | grep 0x54322 | awk '{print $$2}' | xargs -r ipcrm -m
+	-ipcs -s | grep 0x67891 | awk '{print $$2}' | xargs -r ipcrm -s
+	-ipcs -q | grep 0x12346 | awk '{print $$2}' | xargs -r ipcrm -q
 
 # Run targets
 run-daemon: all
